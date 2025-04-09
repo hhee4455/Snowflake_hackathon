@@ -1,0 +1,28 @@
+# Python 가상 환경
+venv/
+.env
+
+# Python 기본 파일
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+
+# Jupyter Notebook 체크포인트
+.ipynb_checkpoints
+
+# Streamlit 캐시
+.streamlit/
+
+# Snowflake 관련 파일
+*.snowflake_connection
+
+# macOS 시스템 파일
+.DS_Store
+
+# 기타
+*.log
+*.bak
+*.swp
+config.json

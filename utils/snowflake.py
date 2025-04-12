@@ -1,17 +1,17 @@
 import snowflake.connector
 import json
 
-def get_connection():
-    with open("config.json") as f:
-        creds = json.load(f)
+def get_snowflake_connection(config_path="config.json"):
+    with open(config_path) as f:
+        config = json.load(f)["snowflake"]
 
     conn = snowflake.connector.connect(
-        user=creds["user"],
-        password=creds["password"],
-        account=creds["account"],
-        warehouse=creds["warehouse"],
-        database=creds["database"],
-        schema=creds["schema"],
-        role=creds["role"]
+        user=config["user"],
+        password=config["password"],
+        account=config["account"],
+        warehouse=config["warehouse"],
+        database=config["database"],
+        schema=config["schema"],
+        role=config["role"]
     )
     return conn

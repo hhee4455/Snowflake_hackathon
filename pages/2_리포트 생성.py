@@ -1,27 +1,23 @@
 import streamlit as st
 import pandas as pd
 from utils.snowflake import get_snowpark_session
-from utils.pdf_utils import generate_pdf
+from datetime import datetime
 
-# ---------------------- 페이지 설정 ----------------------
-st.set_page_config(
-    page_title="젠트리피케이션 지역별 요약 리포트",
-    layout="wide"
-)
+# ---------------------- 설정 ----------------------
+st.set_page_config(page_title="젠트리피케이션 리포트", layout="wide")
 
 # ---------------------- 헤더 ----------------------
 st.markdown("""
-    <div style='padding: 2.5rem 2rem; background: linear-gradient(90deg, #4F46E5, #9333EA); border-radius: 1rem; color: white; text-align: center;'>
-        <h1 style='margin-bottom: 0.5rem;'>📄 젠트리피케이션 지역별 요약 리포트</h1>
-        <p style='font-size: 1.1rem;'>선택한 지역과 연도를 기반으로 위험도 데이터를 분석하고, LLM이 자동 작성한 정책 보고서를 제공합니다.</p>
+    <div style='padding: 2rem; background: linear-gradient(90deg, #4F46E5, #9333EA); border-radius: 1rem; color: white; text-align: center;'>
+        <h1 style='margin-bottom: 0.5rem;'>젠트리피케이션 지역별 요약 리포트</h1>
+        <p style='font-size: 1.1rem;'>선택한 지역과 연도를 기반으로 LLM이 자동 작성한 정책 보고서를 제공합니다.</p>
     </div>
 """, unsafe_allow_html=True)
-
 st.divider()
 
 # ---------------------- 유도 메시지 (최초 1회) ----------------------
 if "shown_tip" not in st.session_state:
-    st.info("⚠️ 리포트 생성은 서버 리소스를 사용하므로 꼭 필요한 경우에만 눌러주세요.")
+    st.info("⚠️ 리포트 생성을 반복 호출하면 Snowflake 비용이 발생할 수 있습니다.")
     st.session_state.shown_tip = True
 
 # ---------------------- 데이터 로딩 ----------------------
@@ -43,14 +39,14 @@ selected_year = st.selectbox("📅 연도 선택", year_list)
 
 filtered = df[(df["REGION_NAME"] == selected_region) & (df["YEAR"] == selected_year)]
 
-# ---------------------- 버튼 및 LLM 실행 ----------------------
+# ---------------------- 버튼 및 실행 ----------------------
 if st.button("🧠 LLM 분석 리포트 생성"):
     if filtered.empty:
         st.warning("선택한 조건에 맞는 데이터가 없습니다.")
     else:
         with st.spinner("⏳ 분석 중입니다..."):
             try:
-                # 📄 프롬프트 구성
+                # 프롬프트 구성
                 prompt = f"""
 다음은 {selected_year}년 동안 {selected_region}의 월별 젠트리피케이션 위험도 데이터입니다.
 각 항목은 [월 - 지역명: 점수 (등급)] 형식입니다.
@@ -60,7 +56,7 @@ if st.button("🧠 LLM 분석 리포트 생성"):
     for row in filtered.itertuples()
 ) + f"""
 
-이 데이터를 바탕으로 아래 내용을 포함한 정책 분석 보고서를 작성해주세요 (16~18줄 이내):
+이 데이터를 바탕으로 다음 항목을 포함한 정책 분석 보고서를 작성해주세요 (16~18줄 이내):
 
 1. 연중 평균 및 최고 위험도 수준과 해당 월
 2. 점수 상승/하락 시기와 원인에 대한 추론
@@ -71,29 +67,32 @@ if st.button("🧠 LLM 분석 리포트 생성"):
 문체는 도시 정책 보고서처럼 전문적이고 신뢰성 있게 작성해주세요.
 """
 
-                # 🤖 LLM 호출
-                cortex_query = f"""
-                SELECT SNOWFLAKE.CORTEX.COMPLETE(
-                    'claude-3-5-sonnet',
-                    $$ {prompt} $$
-                ) AS SUMMARY
-                """
-                result_df = session.sql(cortex_query).to_pandas()
-                summary_text = result_df.iloc[0, 0]
+                # LLM 호출
+                result_df = session.sql(f"""
+                    SELECT SNOWFLAKE.CORTEX.COMPLETE('claude-3-5-sonnet', $$ {prompt} $$) AS SUMMARY
+                """).to_pandas()
 
-                # 📋 결과 출력
+                summary = result_df.iloc[0, 0]
                 st.success("✅ 리포트 생성 완료!")
                 st.markdown("#### 📋 LLM 분석 결과")
-                st.text_area("LLM이 생성한 정책 보고서 요약", summary_text, height=300)
+                st.text_area("정책 보고서 요약", summary, height=300)
 
-                # 📄 PDF 다운로드
-                pdf_bytes = generate_pdf(selected_region, selected_year, summary_text)
+                # PDF 다운로드
+                # TXT 내용 구성
+                header = (
+                    f"[ Gentrification Report ]\n"
+                    f"지역: {selected_region}\n"
+                    f"연도: {selected_year}\n"
+                    f"생성일: {datetime.today().strftime('%Y-%m-%d')}\n\n"
+                )
+                content = header + summary.strip()
 
+                # 다운로드 버튼
                 st.download_button(
-                    label="📄 리포트 다운로드 (PDF)",
-                    data=pdf_bytes,
-                    file_name=f"{selected_region}_{selected_year}_젠트리피케이션_리포트.pdf",
-                    mime="application/pdf"
+                    label="📄 리포트 다운로드 (TXT)",
+                    data=content.encode("utf-8"),
+                    file_name=f"{selected_region}_{selected_year}_젠트리피케이션_리포트.txt",
+                    mime="text/plain"
                 )
 
             except Exception as e:
@@ -103,7 +102,7 @@ st.divider()
 st.markdown("""
     <div style='text-align: center; font-size: 0.9rem; color: gray;'>
         ⓒ 2025 Gentrification Insight. Powered by Streamlit & Snowflake  
-        <br>데이터 출처: 서울열린데이터광장, 공공데이터포털, Snowflake Marketplace(SPH,DataKnows,LOPLAT), 국세청, 소상공인시장진흥공단 
+        <br>데이터 출처: 서울열린데이터광장, 공공데이터포털, Snowflake Marketplace(SPH, DataKnows, LOPLAT), 국세청, 소상공인시장진흥공단  
         <br>Contact: hhee200456@gmail.com
     </div>
 """, unsafe_allow_html=True)

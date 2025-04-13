@@ -26,6 +26,11 @@ def render_hero():
     <div style='background: linear-gradient(90deg, #4F46E5, #10B981); padding: 3rem 2rem; border-radius: 1.5rem; color: white;'>
         <h1 style='font-size: 2.5rem;'>젠트리피케이션 위험도 분석 플랫폼</h1>
         <p style='font-size: 1.1rem; margin-top: 1rem;'>서울시 데이터를 기반으로 지역별 위험도 지표를 분석하고 시각화하는 Streamlit 기반 대시보드입니다.</p>
+        <div style='margin-top: 1.5rem; font-size: 0.95rem;'>
+            <b>젠트리피케이션이란?</b><br>
+            낙후된 지역이 상업화되면서 임대료 상승, 기존 주민·상인이 밀려나는 도시 현상입니다.<br>
+            본 분석은 이러한 도시 변화를 사전에 감지하고, 정책적 대응을 돕기 위해 만들어졌습니다.
+        </div>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
@@ -33,6 +38,10 @@ def render_hero():
 # ---------------------- 데이터 요약 ----------------------
 def render_data_overview(df):
     st.subheader("데이터 구성 요약")
+    st.markdown("""
+    - 이 데이터는 서울시 각 상권의 월별 경제적 지표를 기반으로 분석되었습니다.
+    - 주요 지표들의 평균, 최솟값, 최댓값을 살펴보고, 데이터 품질 확인을 위해 결측치 정보를 함께 제공합니다.
+    """)
 
     key_columns = {
         "FINAL_SCORE": "최종 점수",
@@ -62,8 +71,12 @@ def render_data_overview(df):
 # ---------------------- 월별 평균 점수 ----------------------
 def render_score_trend(df):
     st.subheader("월별 평균 위험 점수")
-    df = preprocess_month_column(df)
+    st.markdown("""
+    - 시간 흐름에 따라 서울시 전반의 젠트리피케이션 위험 점수가 어떻게 변화하는지를 보여줍니다.
+    - 점수가 높을수록 젠트리피케이션 가능성이 높다고 해석할 수 있습니다.
+    """)
 
+    df = preprocess_month_column(df)
     monthly_score = (
         df.groupby("월")["FINAL_SCORE"]
         .mean()
@@ -82,8 +95,12 @@ def render_score_trend(df):
 # ---------------------- 위험 등급 분포 ----------------------
 def render_danger_distribution(df):
     st.subheader("월별 위험 등급 분포")
-    df = preprocess_month_column(df)
+    st.markdown("""
+    - 각 월별로 위험 등급(낮음/보통/높음)에 속하는 지역의 분포를 시각화합니다.
+    - 위험 등급 분포를 통해 특정 시기에 고위험 지역이 증가하는 추세를 파악할 수 있습니다.
+    """)
 
+    df = preprocess_month_column(df)
     danger_dist = (
         df.groupby(["월", "DANGER_LEVEL"])
         .size()
@@ -103,6 +120,11 @@ def render_danger_distribution(df):
 # ---------------------- 지역별 탐색 ----------------------
 def render_region_explorer(df):
     st.subheader("지역별 위험도 탐색")
+    st.markdown("""
+    - 특정 지역을 선택하여 해당 지역의 월별 위험 점수 및 주요 지표들의 변화를 분석할 수 있습니다.
+    - 지역 맞춤형 대응이 필요한 경우 유용하게 활용할 수 있습니다.
+    """)
+
     region = st.selectbox("지역 선택", sorted(df["REGION_NAME"].dropna().unique()))
     region_df = df[df["REGION_NAME"] == region].copy()
     region_df = preprocess_month_column(region_df)

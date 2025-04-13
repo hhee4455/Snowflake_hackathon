@@ -14,6 +14,7 @@ __pycache__/
 
 # Streamlit 캐시
 .streamlit/
+.streamlit/secrets.toml
 
 # Snowflake 관련 파일
 *.snowflake_connection

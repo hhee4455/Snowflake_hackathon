@@ -104,7 +104,7 @@ def main():
     selected_region = st.selectbox("📍 지역 선택", region_list)
     selected_year = st.selectbox("📅 연도 선택", year_list)
 
-    if st.button("🧠 LLM 분석 리포트 생성"):
+    if st.button("LLM 분석 리포트 생성"):
         generate_report(df, selected_region, selected_year)
 
     st.divider()

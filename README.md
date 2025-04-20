@@ -36,10 +36,10 @@
 
 | 기능명 | 설명 |
 |--------|------|
-| 📊 데이터 대시보드 | 주요 지표 요약, 결측치 분석, 월별/지역별 트렌드 시각화<br><img src="assets/dashboard.gif" width="600"> |
-| 🗺️ 위험도 지도 | 월별 FINAL_SCORE 기준 지역별 색상/크기 시각화<br><img src="assets/map.gif" width="600"> |
-| 🧠 LLM 리포트 생성 | Snowflake Cortex로 정책 리포트 자동 생성<br><img src="assets/report.gif" width="600"> |
-| 📄 플랫폼 구성 요약 | DB 구조 및 Snowflake 처리 흐름 설명 페이지<br><img src="assets/summary.gif" width="600"> |
+| 데이터 대시보드 | 주요 지표 요약, 결측치 분석, 월별/지역별 트렌드 시각화<br><img src="assets/dashboard.gif" width="600"> |
+| 위험도 지도 | 월별 FINAL_SCORE 기준 지역별 색상/크기 시각화<br><img src="assets/map.gif" width="600"> |
+| LLM 리포트 생성 | Snowflake Cortex로 정책 리포트 자동 생성<br><img src="assets/report.gif" width="600"> |
+| 플랫폼 구성 요약 | DB 구조 및 Snowflake 처리 흐름 설명 페이지<br><img src="assets/summary.gif" width="600"> |
 
 ---
 
